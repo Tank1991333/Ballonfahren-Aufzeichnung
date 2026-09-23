@@ -1,74 +1,12 @@
-<!doctype html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#07111e" />
-  <meta name="description" content="Ballonflugbuch als installierbare Web-App mit Live-GPS, Karte, Höhenprofil und Flugbuch." />
-  <link rel="manifest" href="./manifest.webmanifest" />
-  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynHTn8EwFWfKQPMZB+ctTJI5jYWU=" crossorigin="" />
-  <link rel="stylesheet" href="./styles.css" />
-  <title>Ballonflugbuch</title>
-</head>
-<body>
-  <div class="app-shell">
-    <aside class="sidebar" aria-label="Hauptnavigation">
-      <button class="brand" data-page="overview" aria-label="Ballonflugbuch"><span>🎈</span></button>
-      <nav>
-        <button class="nav-btn active" data-page="overview"><span>⌂</span><small>Übersicht</small></button>
-        <button class="nav-btn" data-page="record"><span>▶</span><small>Fahrt erfassen</small></button>
-        <button class="nav-btn" data-page="log"><span>▦</span><small>Flugbuch</small></button>
-        <button class="nav-btn" data-page="map"><span>◇</span><small>Karte</small></button>
-        <button class="nav-btn" data-page="stats"><span>▥</span><small>Statistiken</small></button>
-        <button class="nav-btn" data-page="weather"><span>☁</span><small>Wetter</small></button>
-        <button class="nav-btn" data-page="settings"><span>⚙</span><small>Einstellungen</small></button>
-      </nav>
-      <span class="sidebar-balloon">🎈</span>
-    </aside>
-
-    <main>
-      <header class="topbar">
-        <div class="live-title"><span id="liveDot" class="live-dot"></span><div><strong id="recordingLabel">BEREIT</strong><small id="elapsedLabel">Noch keine Aufzeichnung</small></div></div>
-        <div class="app-title"><span class="balloon">🎈</span><div><b>BALLONFLUGBUCH</b><small>PROFESSIONAL <em>WEB</em></small></div></div>
-        <div class="status"><span id="gpsStatus">⌁ GPS AUS</span><b id="clock">--:--:--</b><span id="weatherMini">☀ --°C</span></div>
-      </header>
-
-      <section class="page active" id="page-overview">
-        <div class="metrics">
-          <article class="metric cyan"><span>◴ GESCHWINDIGKEIT</span><strong id="speed">0</strong><b>km/h</b><small>Ø <i id="avgSpeed">0</i> · MAX <i id="maxSpeed">0</i> km/h</small></article>
-          <article class="metric green"><span>▲ HÖHE</span><strong id="altitude">0</strong><b>m</b><small>MAX <i id="maxAltitude">0</i> m</small></article>
-          <article class="metric amber"><span>◈ RICHTUNG</span><strong id="heading">0°</strong><b id="cardinal">N</b><small>KURS ÜBER GRUND</small></article>
-          <article class="metric red"><span>⌖ GENAUIGKEIT</span><strong id="accuracy">±0</strong><b>m</b><small>GPS-GENAUIGKEIT</small></article>
-        </div>
-        <div class="map-card"><div id="map"></div><div class="map-overlay"><button id="locateBtn">⌖</button><button id="fitBtn">□</button></div></div>
-        <div class="trip-strip">
-          <div><span>◷ DAUER</span><b id="duration">00:00:00</b><small>HH:MM:SS</small></div>
-          <div><span>⌘ STRECKE</span><b><i id="distance">0,00</i> km</b><small>ZURÜCKGELEGT</small></div>
-          <div><span>↗ STEIGRATE</span><b><i id="climb">0,0</i> m/s</b><small>AKTUELL</small></div>
-          <div><span>↘ SINKRATE</span><b><i id="sink">0,0</i> m/s</b><small>AKTUELL</small></div>
-          <div><span>▲ MAX. HÖHE</span><b><i id="stripMaxAlt">0</i> m</b><small>ERREICHT</small></div>
-          <div><span>◴ MAX. TEMPO</span><b><i id="stripMaxSpeed">0</i> km/h</b><small>ERREICHT</small></div>
-        </div>
-        <div class="chart-card"><div class="chart-name">HÖHENPROFIL <span>● LIVE</span></div><canvas id="altitudeChart"></canvas></div>
-        <div class="actions">
-          <button class="danger" id="landingBtn">⌖ LANDUNG MARKIEREN</button>
-          <button id="markerBtn">⚑ MARKIERUNG</button>
-          <label class="button" for="photoInput">▣ FOTO</label><input hidden id="photoInput" type="file" accept="image/*" capture="environment" />
-          <button id="recordBtn">▶ AUFZEICHNUNG STARTEN</button>
-        </div>
-      </section>
-
-      <section class="page" id="page-record"><div class="panel"><h2>Fahrt erfassen</h2><p>Starte die GPS-Aufzeichnung. Die Flugstrecke, Höhe, Geschwindigkeit und Markierungen werden lokal auf diesem Gerät gespeichert.</p><button class="primary big" id="recordBtn2">▶ Aufzeichnung starten</button><div id="recordSummary" class="summary"></div></div></section>
-      <section class="page" id="page-log"><div class="panel"><div class="panel-head"><h2>Flugbuch</h2><button id="exportAllBtn">Export JSON</button></div><div id="logList" class="log-list"></div></div></section>
-      <section class="page" id="page-map"><div class="panel map-only"><h2>Karte</h2><p>Die vollständige Kartenansicht befindet sich in der Übersicht. Dort kannst du auf die aktuelle Position zentrieren und die Strecke einpassen.</p><button class="primary" data-goto="overview">Zur Live-Karte</button></div></section>
-      <section class="page" id="page-stats"><div class="panel"><h2>Statistiken</h2><div id="statsGrid" class="stats-grid"></div></div></section>
-      <section class="page" id="page-weather"><div class="panel"><h2>Wetter am aktuellen Standort</h2><button id="weatherBtn" class="primary">Wetter aktualisieren</button><div id="weatherDetails" class="weather-details">Standortfreigabe erforderlich.</div></div></section>
-      <section class="page" id="page-settings"><div class="panel"><h2>Einstellungen</h2><label class="setting"><span>Kartenstil</span><select id="tileStyle"><option value="osm">Standard</option><option value="topo">Topografisch</option></select></label><label class="setting"><span>GPS-Hochgenauigkeit</span><input id="highAccuracy" type="checkbox" checked /></label><button id="clearBtn" class="danger">Alle lokalen Daten löschen</button><p class="notice">Hinweis: Diese Web-App ist kein zertifiziertes Navigationsinstrument. Für die sichere Ballonfahrt gelten die vorgeschriebenen Instrumente, Verfahren und Wetterinformationen.</p></div></section>
-    </main>
-  </div>
-  <div id="toast" role="status" aria-live="polite"></div>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="./app.js"></script>
-</body>
-</html>
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#07111e"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><link rel="stylesheet" href="styles.css"><title>Ballonflugbuch</title></head><body>
+<div class="app"><aside><div class="logo">🎈</div><nav><button class="nav active" data-page="overview">⌂<small>Übersicht</small></button><button class="nav" data-page="log">▦<small>Flugbuch</small></button><button class="nav" data-page="stats">▥<small>Statistik</small></button><button class="nav" data-page="weather">☁<small>Wetter</small></button><button class="nav" data-page="settings">⚙<small>Einstellungen</small></button></nav></aside>
+<main><header><div class="live"><i id="dot"></i><div><b id="recordingLabel">BEREIT</b><small id="elapsedLabel">Keine Aufzeichnung</small></div></div><div class="title">🎈 <span>BALLONFLUGBUCH<small>PROFESSIONAL WEB</small></span></div><div class="headStatus"><span id="gpsStatus">GPS AUS</span><b id="clock">--:--:--</b><span id="weatherMini">☀ -- °C</span></div></header>
+<section id="overview" class="page active"><div class="metrics"><article class="cyan"><span>◴ GESCHWINDIGKEIT</span><strong id="speed">0</strong><b>km/h</b><small>Ø <i id="avgSpeed">0</i> · MAX <i id="maxSpeed">0</i> km/h</small></article><article class="green"><span>▲ HÖHE</span><strong id="altitude">0</strong><b>m</b><small>MAX <i id="maxAltitude">0</i> m</small></article><article class="amber"><span>◈ RICHTUNG</span><strong id="heading">0°</strong><b id="cardinal">N</b><small>KURS ÜBER GRUND</small></article><article class="red"><span>⌖ GENAUIGKEIT</span><strong id="accuracy">±0</strong><b>m</b><small>GPS-GENAUIGKEIT</small></article></div>
+<div class="mapCard"><div id="map"></div><div id="mapInfo">Noch keine GPS-Position</div><div class="mapButtons"><button id="locateBtn" title="Position">⌖</button><button id="fitBtn" title="Route einpassen">□</button><button id="followBtn" title="Verfolgen">◎</button></div></div>
+<div class="strip"><div><span>DAUER</span><b id="duration">00:00:00</b></div><div><span>STRECKE</span><b><i id="distance">0,00</i> km</b></div><div><span>STEIGRATE</span><b><i id="climb">0,0</i> m/s</b></div><div><span>SINKRATE</span><b><i id="sink">0,0</i> m/s</b></div><div><span>MAX. HÖHE</span><b><i id="stripMaxAlt">0</i> m</b></div><div><span>MAX. TEMPO</span><b><i id="stripMaxSpeed">0</i> km/h</b></div></div>
+<div class="chart"><div>HÖHENPROFIL <span>● LIVE</span></div><canvas id="altitudeChart"></canvas></div><div class="actions"><button class="danger" id="landingBtn">⌖ LANDUNG</button><button id="markerBtn">⚑ MARKIERUNG</button><label class="button" for="photoInput">▣ FOTO</label><input hidden id="photoInput" type="file" accept="image/*" capture="environment"><button class="primary" id="recordBtn">▶ AUFZEICHNUNG STARTEN</button></div></section>
+<section id="log" class="page panel"><div class="panelHead"><h2>Flugbuch</h2><div><label class="button compact" for="gpxInput">GPX IMPORT</label><input hidden id="gpxInput" type="file" accept=".gpx,application/gpx+xml"><button id="exportAllBtn">JSON EXPORT</button></div></div><div id="logList"></div></section>
+<section id="stats" class="page panel"><h2>Statistik</h2><div id="statsGrid" class="stats"></div></section>
+<section id="weather" class="page panel"><h2>Wetter am Standort</h2><button class="primary" id="weatherBtn">WETTER AKTUALISIEREN</button><div id="weatherDetails" class="weatherBox">Standortfreigabe erforderlich.</div></section>
+<section id="settings" class="page panel"><h2>Einstellungen</h2><label class="setting"><span>Kartenstil</span><select id="tileStyle"><option value="osm">Standard</option><option value="satellite">Satellit</option><option value="topo">Topografisch</option></select></label><label class="setting"><span>GPS-Hochgenauigkeit</span><input id="highAccuracy" type="checkbox" checked></label><label class="setting"><span>Position automatisch verfolgen</span><input id="autoFollow" type="checkbox" checked></label><label class="setting"><span>Bildschirm während der Fahrt aktiv halten</span><input id="wakeLockEnabled" type="checkbox" checked></label><button class="danger" id="clearBtn">ALLE LOKALEN DATEN LÖSCHEN</button><p class="notice">Hinweis: Diese Web-App ist kein zertifiziertes Navigationsinstrument und ersetzt keine vorgeschriebenen Instrumente, Wetterinformationen oder Verfahren.</p></section>
+</main></div><div id="toast"></div><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="app.js"></script></body></html>
